@@ -131,7 +131,7 @@ function Header({history, dimensions}) {
                     }
                 })
         }
-    }, [menuState.menuOpened]);
+    }, [menuState.menuOpened, dimensions.height, dimensions.width, history]);
 
     return (
         <div className="header">
