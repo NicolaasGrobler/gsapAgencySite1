@@ -1,20 +1,60 @@
-import React, {useEffect} from "react";
+import React, {Fragment, useEffect, useState} from "react";
+import {Route} from 'react-router-dom';
 import gsap from 'gsap';
-import Banner from "./components/banner";
-import Cases from "./components/cases";
-import Header from "./components/header";
-import IntroOverlay from "./components/introOverlay";
 import "./styles/App.scss";
 
+//Components
+import Header from "./components/header";
+import Navigation from "./components/navigation";
+
+//Pages
+import Home from "./pages/home";
+import CaseStudies from './pages/caseStudies';
+import Approach from './pages/approach';
+import Services from './pages/services';
+import About from './pages/about';
+
+//routes
+const routes = [
+    {
+        path: '/',
+        name: 'Home',
+        Component: Home
+    }, {
+        path: '/case-studies',
+        name: 'Case Studies',
+        Component: CaseStudies
+    }, {
+        path: '/approach',
+        name: 'Approach',
+        Component: Approach
+    }, {
+        path: '/services',
+        name: 'Services',
+        Component: Services
+    }, {
+        path: '/about-us',
+        name: 'About',
+        Component: About
+    }
+];
+
+function debounce(fn, ms) {
+    let timer;
+    return () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            timer = null;
+            fn.apply(this, arguments)
+        }, ms)
+    }
+}
+
 function App() {
+    const [dimensions,
+        setDimensions] = useState({height: window.innerHeight, width: window.innerWidth})
 
     useEffect(() => {
-        let vh = window.innerHeight * .01;
-        document
-            .documentElement
-            .style
-            .setProperty('--vh', `${vh}px`);
-
         //prevent flashing
         gsap.to('body', 0, {
             css: {
@@ -22,55 +62,35 @@ function App() {
             }
         });
 
-        //timeline
-        const tl = gsap.timeline();
+        let vh = dimensions.height * .01;
+        document
+            .documentElement
+            .style
+            .setProperty('--vh', `${vh}px`);
 
-        tl
-            .from(".line span", 1.8, {
-            y: 100,
-            ease: 'power4.out',
-            delay: 1,
-            skewY: 7,
-            stagger: {
-                amount: 0.3
-            }
-        })
-            .to(".overlay-top", 1.6, {
-                height: 0,
-                ease: 'expo.inOut',
-                stagger: 0.4
-            })
-            .to(".overlay-bottom", 1.6, {
-                width: 0,
-                ease: 'expo.inOut',
-                delay: -.8,
-                stagger: {
-                    amount: .4
-                }
-            })
-            .to('.intro-overlay', 0, {
-                css: {
-                    display: 'none'
-                }
-            })
-            .from(".case-image img", 1.6, {
-                scale: 1.4,
-                ease: 'expo.inOut',
-                delay: -2,
-                stagger: {
-                    amount: 0.4
-                }
-            })
+        const debouncedHandleResize = debounce(function handleResize() {
+            setDimensions({height: window.innerHeight, width: window.innerWidth});
+        }, 1000);
 
-    }, []);
+        window.addEventListener('resize', debouncedHandleResize);
+
+        return () => {
+            window.removeEventListener('resize', debouncedHandleResize)
+        }
+    });
 
     return (
-        <div className='App'>
-            <IntroOverlay/>
-            <Header/>
-            <Banner/>
-            <Cases/>
-        </div>
+        <Fragment>
+            <Header dimensions={dimensions}/>
+            <div className="App">
+                {routes.map(({path, Component}) => (
+                    <Route key={path} exact path={path}>
+                        <Component/>
+                    </Route>
+                ))}
+            </div>
+            <Navigation/>
+        </Fragment>
     );
 }
 
